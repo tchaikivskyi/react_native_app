@@ -1,0 +1,48 @@
+import { Room } from "../components/RoomCard";
+
+export const mockRooms: Room[] = [
+  {
+    id: '1',
+    title: 'Amazing Room',
+    price: 120,
+    image: '',
+    type: 'Standart',
+    capacity: 2,
+    beds: 1,
+    rating: 4.8,
+    description: 'Comfortable room for two guests.',
+  },
+  {
+    id: '2',
+    title: 'Fabulous Room',
+    price: 150,
+    image: '',
+    type: 'Family',
+    capacity: 4,
+    beds: 2,
+    rating: 4.6,
+    description: 'Large family room with two beds.',
+  },
+  {
+    id: '3',
+    title: 'Fantastic Room',
+    price: 180,
+    image: '',
+    type: 'Suite',
+    capacity: 2,
+    beds: 1,
+    rating: 4.9,
+    description: 'Premium suite with extra comfort.',
+  },
+  {
+    id: '4',
+    title: 'Spectacular Room',
+    price: 100,
+    image: '',
+    type: 'Standart',
+    capacity: 1,
+    beds: 1,
+    rating: 4.4,
+    description: 'Small cozy room for one guest.',
+  },
+];

@@ -1,0 +1,172 @@
+import React, { useState } from 'react';
+import {
+  Text,
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  FlatList,
+} from 'react-native';
+import { ScreenWrapper } from '../components/ScreenWrapper';
+import { COLORS } from '../constants/style';
+import { ChevronRight } from 'lucide-react-native';
+
+import {
+  mockReservations,
+  Reservation,
+  ReservationStatus,
+} from '../mocks/reservations';
+
+export const BookingScreen = () => {
+  const [activeFilter, setActiveFilter] = useState<ReservationStatus>('all');
+
+  const filteredReservations =
+    activeFilter === 'all'
+      ? mockReservations
+      : mockReservations.filter(item => item.status === activeFilter);
+
+  const filters: { label: string; value: ReservationStatus }[] = [
+    { label: 'ALL', value: 'all' },
+    { label: 'FINISHED', value: 'finished' },
+    { label: 'CURRENT', value: 'current' },
+  ];
+
+  const renderReservation = ({ item }: { item: Reservation }) => (
+    <TouchableOpacity
+      style={styles.card}
+      activeOpacity={0.8}
+      onPress={() => {}}
+    >
+      <View style={styles.imageBox}>
+        <Text style={styles.imageIcon}>▧</Text>
+      </View>
+
+      <View style={styles.cardContent}>
+        <Text style={styles.guestName}>{item.guestName}</Text>
+        <Text style={styles.location}>{item.location}</Text>
+      </View>
+
+      <ChevronRight size={18} color="#999" />
+    </TouchableOpacity>
+  );
+
+  return (
+    <ScreenWrapper>
+      <View style={styles.root}>
+        <View style={styles.filters}>
+          {filters.map(filter => (
+            <TouchableOpacity
+              key={filter.value}
+              style={[
+                styles.filterChip,
+                activeFilter === filter.value && styles.filterChipActive,
+              ]}
+              onPress={() => setActiveFilter(filter.value)}
+            >
+              <Text
+                style={[
+                  styles.filterText,
+                  activeFilter === filter.value && styles.filterTextActive,
+                ]}
+              >
+                {filter.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <Text style={styles.title}>Your reservations</Text>
+
+        <FlatList
+          data={filteredReservations}
+          keyExtractor={item => item.id}
+          renderItem={renderReservation}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={
+            <Text style={styles.empty}>No reservations found</Text>
+          }
+        />
+      </View>
+    </ScreenWrapper>
+  );
+};
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    paddingTop: 16,
+  },
+  top: {
+    marginBottom: 20,
+  },
+  filters: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 28,
+  },
+  filterChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+    backgroundColor: '#EAF7EF',
+  },
+  filterChipActive: {
+    backgroundColor: COLORS.primary,
+  },
+  filterText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: COLORS.primary,
+  },
+  filterTextActive: {
+    color: '#FFFFFF',
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#111',
+    marginBottom: 14,
+  },
+  list: {
+    paddingBottom: 40,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 12,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  imageBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 10,
+    backgroundColor: '#E8F0FE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  imageIcon: {
+    color: '#8AA8D8',
+    fontSize: 22,
+  },
+  cardContent: {
+    flex: 1,
+  },
+  guestName: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#111',
+  },
+  location: {
+    fontSize: 12,
+    color: '#777',
+    marginTop: 2,
+  },
+  empty: {
+    textAlign: 'center',
+    marginTop: 40,
+    color: '#777',
+  },
+});
