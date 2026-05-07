@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  ActivityIndicator,
   Text,
   StyleSheet,
   View,
@@ -10,19 +11,18 @@ import { ScreenWrapper } from '../components/ScreenWrapper';
 import { COLORS } from '../constants/style';
 import { ChevronRight } from 'lucide-react-native';
 
-import {
-  mockReservations,
-  Reservation,
-  ReservationStatus,
-} from '../mocks/reservations';
+import { CustomButton } from '../components/Button';
+import { useReservations } from '../hooks/useReservations';
+import { Reservation, ReservationStatus } from '../types/reservation';
 
 export const BookingScreen = () => {
   const [activeFilter, setActiveFilter] = useState<ReservationStatus>('all');
+  const { reservations, loading, error, refetch } = useReservations();
 
   const filteredReservations =
     activeFilter === 'all'
-      ? mockReservations
-      : mockReservations.filter(item => item.status === activeFilter);
+      ? reservations
+      : reservations.filter(item => item.status === activeFilter);
 
   const filters: { label: string; value: ReservationStatus }[] = [
     { label: 'ALL', value: 'all' },
@@ -76,16 +76,29 @@ export const BookingScreen = () => {
 
         <Text style={styles.title}>Your reservations</Text>
 
-        <FlatList
-          data={filteredReservations}
-          keyExtractor={item => item.id}
-          renderItem={renderReservation}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.list}
-          ListEmptyComponent={
-            <Text style={styles.empty}>No reservations found</Text>
-          }
-        />
+        {loading && reservations.length === 0 ? (
+          <ActivityIndicator
+            size="large"
+            color={COLORS.primary}
+            style={styles.loader}
+          />
+        ) : error ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.empty}>{error}</Text>
+            <CustomButton title="Try again" onPress={refetch} />
+          </View>
+        ) : (
+          <FlatList
+            data={filteredReservations}
+            keyExtractor={item => item.id}
+            renderItem={renderReservation}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.list}
+            ListEmptyComponent={
+              <Text style={styles.empty}>No reservations found</Text>
+            }
+          />
+        )}
       </View>
     </ScreenWrapper>
   );
@@ -129,6 +142,14 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingBottom: 40,
+  },
+  loader: {
+    marginTop: 40,
+  },
+  errorBox: {
+    alignItems: 'center',
+    gap: 14,
+    marginTop: 40,
   },
   card: {
     backgroundColor: '#FFFFFF',

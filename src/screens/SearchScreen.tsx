@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -16,9 +16,9 @@ import { DateRangePicker } from '../components/Calendar';
 import { CustomButton } from '../components/Button';
 
 import { COLORS } from '../constants/style';
-import { Room, RoomType } from '../components/RoomCard';
+import { RoomType } from '../components/RoomCard';
 import { SearchStackParamList } from '../navigation/types';
-import { mockRooms } from '../mocks/rooms';
+import { useRooms } from '../hooks/useRooms';
 
 type SearchNavigationProp = StackNavigationProp<
   SearchStackParamList,
@@ -59,19 +59,13 @@ const guestOptions = [1, 2, 3, 4];
 export const SearchScreen = () => {
   const navigation = useNavigation<SearchNavigationProp>();
 
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { rooms, loading, error, refetch } = useRooms();
 
   const [sort, setSort] = useState<SortType>('default');
   const [filters, setFilters] = useState<Filters>(initialFilters);
 
   const [sortVisible, setSortVisible] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
-
-  useEffect(() => {
-    setRooms(mockRooms);
-    setLoading(false);
-  }, []);
 
   const updateFilters = (newFilters: Partial<Filters>) => {
     setFilters(prevFilters => ({
@@ -216,12 +210,18 @@ export const SearchScreen = () => {
 
   return (
     <ScreenWrapper>
-      {loading ? (
+      {loading && rooms.length === 0 ? (
         <ActivityIndicator
           size="large"
           color={COLORS.primary}
           style={styles.loader}
         />
+      ) : error ? (
+        <View style={styles.errorBox}>
+          <Text style={styles.errorTitle}>Could not load rooms</Text>
+          <Text style={styles.errorText}>{error}</Text>
+          <CustomButton title="Try again" onPress={refetch} />
+        </View>
       ) : (
         <RoomList
           data={filteredData}
@@ -477,6 +477,23 @@ const styles = StyleSheet.create({
   loader: {
     flex: 1,
     justifyContent: 'center',
+  },
+  errorBox: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#111',
+    marginBottom: 8,
+  },
+  errorText: {
+    color: '#777',
+    textAlign: 'center',
+    marginBottom: 18,
   },
   modalOverlay: {
     flex: 1,
