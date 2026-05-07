@@ -14,12 +14,14 @@ import { ScreenWrapper } from '../components/ScreenWrapper';
 import { RoomList } from '../components/RoomList';
 import { DateRangePicker } from '../components/Calendar';
 import { CustomButton } from '../components/Button';
-
 import { COLORS } from '../constants/style';
 import { ROUTES } from '../constants/routes';
 import { SearchStackParamList } from '../navigation/types';
 import { useRooms } from '../hooks/useRooms';
-import { RoomType } from '../types/room';
+import { Room, RoomType } from '../types/room';
+import { useAppDispatch, useAppSelector } from '../store';
+import { addSavedRoom, removeSavedRoom } from '../store/room/roomSlice';
+import { useTheme } from '../context/ThemeContext';
 
 type SearchNavigationProp = StackNavigationProp<
   SearchStackParamList,
@@ -54,25 +56,26 @@ const sortOptions: { label: string; value: SortType }[] = [
 ];
 
 const roomTypes: RoomType[] = ['Standart', 'Family', 'Suite'];
-
 const guestOptions = [1, 2, 3, 4];
 
 export const SearchScreen = () => {
   const navigation = useNavigation<SearchNavigationProp>();
-
+  const dispatch = useAppDispatch();
+  const { colors } = useTheme();
   const { rooms, loading, error, refetch } = useRooms();
+  const savedRooms = useAppSelector(state => state.rooms.savedRooms);
+  const savedRoomIds = useMemo(
+    () => savedRooms.map(room => room.id),
+    [savedRooms],
+  );
 
   const [sort, setSort] = useState<SortType>('default');
   const [filters, setFilters] = useState<Filters>(initialFilters);
-
   const [sortVisible, setSortVisible] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
 
   const updateFilters = (newFilters: Partial<Filters>) => {
-    setFilters(prevFilters => ({
-      ...prevFilters,
-      ...newFilters,
-    }));
+    setFilters(prevFilters => ({ ...prevFilters, ...newFilters }));
   };
 
   const resetFilters = () => {
@@ -102,13 +105,10 @@ export const SearchScreen = () => {
     switch (sort) {
       case 'price_asc':
         return result.sort((a, b) => a.price - b.price);
-
       case 'price_desc':
         return result.sort((a, b) => b.price - a.price);
-
       case 'rating_desc':
         return result.sort((a, b) => b.rating - a.rating);
-
       default:
         return result;
     }
@@ -129,63 +129,51 @@ export const SearchScreen = () => {
     navigation.navigate(ROUTES.ROOM_DETAILS, { roomId });
   };
 
+  const handleToggleSaveRoom = (room: Room) => {
+    if (savedRoomIds.includes(room.id)) {
+      dispatch(removeSavedRoom(room.id));
+      return;
+    }
+
+    dispatch(addSavedRoom(room));
+  };
+
   const toggleRoomType = (type: RoomType) => {
-    updateFilters({
-      type: filters.type === type ? null : type,
-    });
+    updateFilters({ type: filters.type === type ? null : type });
   };
 
   const toggleGuests = (guests: number) => {
-    updateFilters({
-      guests: filters.guests === guests ? null : guests,
-    });
-  };
-
-  const togglePriceUpTo120 = () => {
-    const isActive = filters.minPrice === null && filters.maxPrice === 120;
-
-    updateFilters({
-      minPrice: null,
-      maxPrice: isActive ? null : 120,
-    });
-  };
-
-  const togglePrice121To170 = () => {
-    const isActive = filters.minPrice === 121 && filters.maxPrice === 170;
-
-    updateFilters({
-      minPrice: isActive ? null : 121,
-      maxPrice: isActive ? null : 170,
-    });
-  };
-
-  const togglePriceFrom171 = () => {
-    const isActive = filters.minPrice === 171 && filters.maxPrice === null;
-
-    updateFilters({
-      minPrice: isActive ? null : 171,
-      maxPrice: null,
-    });
+    updateFilters({ guests: filters.guests === guests ? null : guests });
   };
 
   const ListHeader = useMemo(
     () => (
       <View style={styles.headerContent}>
-        <Text style={styles.mainTitle}>Rooms</Text>
+        <Text style={[styles.mainTitle, { color: colors.text }]}>Rooms</Text>
 
         <View style={styles.controlsRow}>
           <TouchableOpacity
-            style={styles.filterButton}
+            style={[
+              styles.filterButton,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
             onPress={() => setSortVisible(true)}
           >
-            <Text style={styles.filterText}>⇅ Sort</Text>
+            <Text style={[styles.filterText, { color: colors.text }]}>
+              Sort
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.filterButton}
+            style={[
+              styles.filterButton,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
             onPress={() => setFilterVisible(true)}
           >
-            <Text style={styles.filterText}>⚙ Filter</Text>
+            <Text style={[styles.filterText, { color: colors.text }]}>
+              Filter
+            </Text>
 
             {activeFiltersCount > 0 && (
               <View style={styles.badge}>
@@ -206,7 +194,32 @@ export const SearchScreen = () => {
         </View>
       </View>
     ),
-    [activeFiltersCount, filters.startDate, filters.endDate],
+    [activeFiltersCount, colors, filters.startDate, filters.endDate],
+  );
+
+  const renderChip = (
+    label: string,
+    isActive: boolean,
+    onPress: () => void,
+  ) => (
+    <TouchableOpacity
+      style={[
+        styles.chip,
+        { backgroundColor: colors.background, borderColor: colors.border },
+        isActive && styles.chipActive,
+      ]}
+      onPress={onPress}
+    >
+      <Text
+        style={[
+          styles.chipText,
+          { color: colors.text },
+          isActive && styles.chipTextActive,
+        ]}
+      >
+        {label}
+      </Text>
+    </TouchableOpacity>
   );
 
   return (
@@ -219,8 +232,12 @@ export const SearchScreen = () => {
         />
       ) : error ? (
         <View style={styles.errorBox}>
-          <Text style={styles.errorTitle}>Could not load rooms</Text>
-          <Text style={styles.errorText}>{error}</Text>
+          <Text style={[styles.errorTitle, { color: colors.text }]}>
+            Could not load rooms
+          </Text>
+          <Text style={[styles.errorText, { color: colors.mutedText }]}>
+            {error}
+          </Text>
           <CustomButton title="Try again" onPress={refetch} />
         </View>
       ) : (
@@ -230,6 +247,8 @@ export const SearchScreen = () => {
           HeaderComponent={ListHeader}
           onReset={resetFilters}
           onRoomPress={handleOpenRoom}
+          savedRoomIds={savedRoomIds}
+          onToggleSave={handleToggleSaveRoom}
         />
       )}
 
@@ -240,8 +259,10 @@ export const SearchScreen = () => {
         onRequestClose={() => setSortVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>Sort by</Text>
+          <View style={[styles.modalBox, { backgroundColor: colors.card }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Sort by
+            </Text>
 
             {sortOptions.map(option => {
               const isActive = sort === option.value;
@@ -249,7 +270,7 @@ export const SearchScreen = () => {
               return (
                 <TouchableOpacity
                   key={option.value}
-                  style={styles.optionRow}
+                  style={[styles.optionRow, { borderBottomColor: colors.border }]}
                   onPress={() => {
                     setSort(option.value);
                     setSortVisible(false);
@@ -258,13 +279,14 @@ export const SearchScreen = () => {
                   <Text
                     style={[
                       styles.optionText,
+                      { color: colors.text },
                       isActive && styles.optionTextActive,
                     ]}
                   >
                     {option.label}
                   </Text>
 
-                  {isActive && <Text style={styles.checkIcon}>✓</Text>}
+                  {isActive && <Text style={styles.checkIcon}>OK</Text>}
                 </TouchableOpacity>
               );
             })}
@@ -286,124 +308,76 @@ export const SearchScreen = () => {
         onRequestClose={() => setFilterVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>Filter</Text>
+          <View style={[styles.modalBox, { backgroundColor: colors.card }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Filter
+            </Text>
 
-            <Text style={styles.sectionTitle}>Room type</Text>
-
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Room type
+            </Text>
             <View style={styles.chipsRow}>
-              {roomTypes.map(type => {
-                const isActive = filters.type === type;
-
-                return (
-                  <TouchableOpacity
-                    key={type}
-                    style={[styles.chip, isActive && styles.chipActive]}
-                    onPress={() => toggleRoomType(type)}
-                  >
-                    <Text
-                      style={[
-                        styles.chipText,
-                        isActive && styles.chipTextActive,
-                      ]}
-                    >
-                      {type}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+              {roomTypes.map(type =>
+                renderChip(type, filters.type === type, () =>
+                  toggleRoomType(type),
+                ),
+              )}
             </View>
 
-            <Text style={styles.sectionTitle}>Guests</Text>
-
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Guests
+            </Text>
             <View style={styles.chipsRow}>
-              {guestOptions.map(guest => {
-                const isActive = filters.guests === guest;
-
-                return (
-                  <TouchableOpacity
-                    key={guest}
-                    style={[styles.chip, isActive && styles.chipActive]}
-                    onPress={() => toggleGuests(guest)}
-                  >
-                    <Text
-                      style={[
-                        styles.chipText,
-                        isActive && styles.chipTextActive,
-                      ]}
-                    >
-                      {guest}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+              {guestOptions.map(guest =>
+                renderChip(String(guest), filters.guests === guest, () =>
+                  toggleGuests(guest),
+                ),
+              )}
             </View>
 
-            <Text style={styles.sectionTitle}>Price</Text>
-
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Price
+            </Text>
             <View style={styles.chipsRow}>
-              <TouchableOpacity
-                style={[
-                  styles.chip,
-                  filters.minPrice === null &&
-                    filters.maxPrice === 120 &&
-                    styles.chipActive,
-                ]}
-                onPress={togglePriceUpTo120}
-              >
-                <Text
-                  style={[
-                    styles.chipText,
-                    filters.minPrice === null &&
-                      filters.maxPrice === 120 &&
-                      styles.chipTextActive,
-                  ]}
-                >
-                  Up to €120
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.chip,
-                  filters.minPrice === 121 &&
-                    filters.maxPrice === 170 &&
-                    styles.chipActive,
-                ]}
-                onPress={togglePrice121To170}
-              >
-                <Text
-                  style={[
-                    styles.chipText,
-                    filters.minPrice === 121 &&
-                      filters.maxPrice === 170 &&
-                      styles.chipTextActive,
-                  ]}
-                >
-                  €121 - €170
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.chip,
-                  filters.minPrice === 171 &&
-                    filters.maxPrice === null &&
-                    styles.chipActive,
-                ]}
-                onPress={togglePriceFrom171}
-              >
-                <Text
-                  style={[
-                    styles.chipText,
-                    filters.minPrice === 171 &&
-                      filters.maxPrice === null &&
-                      styles.chipTextActive,
-                  ]}
-                >
-                  €171+
-                </Text>
-              </TouchableOpacity>
+              {renderChip(
+                'Up to EUR 120',
+                filters.minPrice === null && filters.maxPrice === 120,
+                () =>
+                  updateFilters({
+                    minPrice: null,
+                    maxPrice:
+                      filters.minPrice === null && filters.maxPrice === 120
+                        ? null
+                        : 120,
+                  }),
+              )}
+              {renderChip(
+                'EUR 121 - EUR 170',
+                filters.minPrice === 121 && filters.maxPrice === 170,
+                () =>
+                  updateFilters({
+                    minPrice:
+                      filters.minPrice === 121 && filters.maxPrice === 170
+                        ? null
+                        : 121,
+                    maxPrice:
+                      filters.minPrice === 121 && filters.maxPrice === 170
+                        ? null
+                        : 170,
+                  }),
+              )}
+              {renderChip(
+                'EUR 171+',
+                filters.minPrice === 171 && filters.maxPrice === null,
+                () =>
+                  updateFilters({
+                    minPrice:
+                      filters.minPrice === 171 && filters.maxPrice === null
+                        ? null
+                        : 171,
+                    maxPrice: null,
+                  }),
+              )}
             </View>
 
             <View style={styles.modalActions}>
@@ -413,7 +387,6 @@ export const SearchScreen = () => {
                 onPress={resetFilters}
                 style={styles.actionButton}
               />
-
               <CustomButton
                 title="Apply filters"
                 onPress={() => setFilterVisible(false)}
@@ -430,14 +403,12 @@ export const SearchScreen = () => {
 const styles = StyleSheet.create({
   headerContent: {
     paddingVertical: 10,
-    backgroundColor: '#F8F9FB',
   },
   mainTitle: {
     fontSize: 22,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 20,
-    color: '#000',
   },
   controlsRow: {
     flexDirection: 'row',
@@ -447,16 +418,13 @@ const styles = StyleSheet.create({
   filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#EEE',
   },
   filterText: {
     fontSize: 14,
-    color: '#555',
   },
   badge: {
     backgroundColor: COLORS.primary,
@@ -488,21 +456,18 @@ const styles = StyleSheet.create({
   errorTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#111',
     marginBottom: 8,
   },
   errorText: {
-    color: '#777',
     textAlign: 'center',
     marginBottom: 18,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'flex-end',
   },
   modalBox: {
-    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
@@ -512,18 +477,15 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 18,
-    color: '#000',
   },
   optionRow: {
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   optionText: {
     fontSize: 16,
-    color: '#333',
   },
   optionTextActive: {
     color: COLORS.primary,
@@ -531,7 +493,7 @@ const styles = StyleSheet.create({
   },
   checkIcon: {
     color: COLORS.primary,
-    fontSize: 18,
+    fontSize: 13,
     fontWeight: 'bold',
   },
   modalButton: {
@@ -542,7 +504,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginTop: 14,
     marginBottom: 10,
-    color: '#000',
   },
   chipsRow: {
     flexDirection: 'row',
@@ -552,9 +513,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 9,
     borderRadius: 20,
-    backgroundColor: '#F5F5F5',
     borderWidth: 1,
-    borderColor: '#EEEEEE',
     marginRight: 8,
     marginBottom: 8,
   },
@@ -564,7 +523,6 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: 14,
-    color: '#555',
   },
   chipTextActive: {
     color: '#FFFFFF',

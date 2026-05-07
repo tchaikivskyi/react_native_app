@@ -7,6 +7,7 @@ import { Calendar, Search as SearchIcon, User } from 'lucide-react-native';
 
 import { COLORS } from '../constants/style';
 import { ROUTES } from '../constants/routes';
+import { useTheme } from '../context/ThemeContext';
 
 import { SearchScreen } from '../screens/SearchScreen';
 import { BookingScreen } from '../screens/BookingScreen';
@@ -35,19 +36,22 @@ const hiddenTabOptions = {
   tabBarItemStyle: { display: 'none' as const },
 };
 
-const MainTabs = () => (
-  <Tab.Navigator
-    screenOptions={({ route }) => ({
+const MainTabs = () => {
+  const { colors } = useTheme();
+
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
       headerShown: false,
       tabBarActiveTintColor: COLORS.primary,
-      tabBarInactiveTintColor: '#C7C7C7',
+      tabBarInactiveTintColor: colors.mutedText,
       tabBarStyle: {
         height: 68,
         paddingBottom: 10,
         paddingTop: 8,
         borderTopWidth: 1,
-        borderTopColor: '#F0F0F0',
-        backgroundColor: '#FFFFFF',
+        borderTopColor: colors.border,
+        backgroundColor: colors.surface,
       },
       tabBarLabelStyle: {
         fontSize: 11,
@@ -64,8 +68,8 @@ const MainTabs = () => (
 
         return Icon ? <Icon color={color} size={size} /> : <Text>●</Text>;
       },
-    })}
-  >
+      })}
+    >
     <Tab.Screen
       name={ROUTES.SEARCH}
       component={SearchScreen}
@@ -95,8 +99,9 @@ const MainTabs = () => (
       component={ContactsScreen}
       options={hiddenTabOptions}
     />
-  </Tab.Navigator>
-);
+    </Tab.Navigator>
+  );
+};
 
 export const AppNavigator = () => (
   <NavigationContainer>

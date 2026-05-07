@@ -3,6 +3,7 @@ import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
 
 import { COLORS } from '../constants/style';
+import { useTheme } from '../context/ThemeContext';
 import { CustomButton } from './Button';
 
 type Props = {
@@ -29,6 +30,7 @@ export const DateRangePicker: React.FC<Props> = ({
   to = null,
   onChange,
 }) => {
+  const { colors } = useTheme();
   const [visible, setVisible] = useState(false);
   const [activeInput, setActiveInput] = useState<ActiveInput>('from');
 
@@ -116,14 +118,16 @@ export const DateRangePicker: React.FC<Props> = ({
 
       <Modal visible={visible} transparent animationType="fade">
         <View style={styles.overlay}>
-          <View style={styles.modalBox}>
+          <View style={[styles.modalBox, { backgroundColor: colors.card }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
                 Select {activeInput === 'from' ? 'from' : 'to'} date
               </Text>
 
               <TouchableOpacity onPress={() => setVisible(false)}>
-                <Text style={styles.close}>✕</Text>
+                <Text style={[styles.close, { color: colors.mutedText }]}>
+                  ×
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -139,6 +143,11 @@ export const DateRangePicker: React.FC<Props> = ({
                 </Text>
               )}
               theme={{
+                calendarBackground: colors.card,
+                dayTextColor: colors.text,
+                monthTextColor: colors.text,
+                textDisabledColor: colors.mutedText,
+                textSectionTitleColor: colors.mutedText,
                 todayTextColor: COLORS.primary,
                 arrowColor: COLORS.primary,
               }}
@@ -163,18 +172,33 @@ type DateBoxProps = {
   onPress: () => void;
 };
 
-const DateBox: React.FC<DateBoxProps> = ({ label, value, onPress }) => (
-  <TouchableOpacity
-    style={styles.dateInput}
-    onPress={onPress}
-    activeOpacity={0.8}
-  >
-    <Text style={styles.inputLabel}>{label}</Text>
-    <Text style={[styles.inputValue, !value && styles.placeholder]}>
-      {value || 'Select date'}
-    </Text>
-  </TouchableOpacity>
-);
+const DateBox: React.FC<DateBoxProps> = ({ label, value, onPress }) => {
+  const { colors } = useTheme();
+
+  return (
+    <TouchableOpacity
+      style={[
+        styles.dateInput,
+        { backgroundColor: colors.card, borderColor: colors.border },
+      ]}
+      onPress={onPress}
+      activeOpacity={0.8}
+    >
+      <Text style={[styles.inputLabel, { color: colors.mutedText }]}>
+        {label}
+      </Text>
+      <Text
+        style={[
+          styles.inputValue,
+          { color: colors.text },
+          !value && [styles.placeholder, { color: colors.mutedText }],
+        ]}
+      >
+        {value || 'Select date'}
+      </Text>
+    </TouchableOpacity>
+  );
+};
 
 const styles = StyleSheet.create({
   inputsRow: {
@@ -183,25 +207,20 @@ const styles = StyleSheet.create({
   },
   dateInput: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: COLORS.border,
   },
   inputLabel: {
     fontSize: 12,
-    color: '#8A8A8A',
     marginBottom: 4,
   },
   inputValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#111111',
   },
   placeholder: {
-    color: '#A0A0A0',
     fontWeight: '400',
   },
   overlay: {
@@ -211,7 +230,6 @@ const styles = StyleSheet.create({
     padding: 18,
   },
   modalBox: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 22,
     padding: 14,
   },
@@ -225,11 +243,9 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111111',
   },
   close: {
     fontSize: 22,
-    color: '#555555',
     padding: 6,
   },
   arrow: {

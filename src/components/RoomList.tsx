@@ -10,6 +10,8 @@ type Props = {
   HeaderComponent: React.ReactElement;
   onReset: () => void;
   onRoomPress: (roomId: string) => void;
+  savedRoomIds?: string[];
+  onToggleSave?: (room: Room) => void;
 };
 
 export const RoomList: React.FC<Props> = ({
@@ -18,6 +20,8 @@ export const RoomList: React.FC<Props> = ({
   HeaderComponent,
   onReset,
   onRoomPress,
+  savedRoomIds = [],
+  onToggleSave,
 }) => {
   return (
     <FlatList
@@ -28,7 +32,12 @@ export const RoomList: React.FC<Props> = ({
       ListHeaderComponent={HeaderComponent}
       ListEmptyComponent={!loading ? <EmptyState onReset={onReset} /> : null}
       renderItem={({ item }) => (
-        <RoomCard room={item} onPress={() => onRoomPress(item.id)} />
+        <RoomCard
+          room={item}
+          isSaved={savedRoomIds.includes(item.id)}
+          onPress={() => onRoomPress(item.id)}
+          onToggleSave={onToggleSave}
+        />
       )}
       contentContainerStyle={styles.listContainer}
       showsVerticalScrollIndicator={false}

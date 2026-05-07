@@ -1,13 +1,32 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import {
+  FlatList,
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+} from 'react-native';
 import { User, ChevronRight } from 'lucide-react-native';
 
 import { ScreenWrapper } from '../components/ScreenWrapper';
 import { CustomButton } from '../components/Button';
 import { COLORS } from '../constants/style';
+import { useTheme } from '../context/ThemeContext';
+import { useAppDispatch, useAppSelector } from '../store';
+import {
+  removeSavedRoom,
+  SavedRoom,
+  updateSavedRoomGuests,
+} from '../store/room/roomSlice';
+
+const MIN_GUESTS = 1;
 
 export const ProfileScreen = () => {
   const [logoutVisible, setLogoutVisible] = useState(false);
+  const dispatch = useAppDispatch();
+  const savedRooms = useAppSelector(state => state.rooms.savedRooms);
+  const { colors, theme, toggleTheme } = useTheme();
 
   const menuItems = [
     'Profile',
@@ -17,32 +36,113 @@ export const ProfileScreen = () => {
     'Contacts',
   ];
 
+  const updateGuests = (room: SavedRoom, nextGuests: number) => {
+    const guests = Math.max(MIN_GUESTS, Math.min(nextGuests, room.capacity));
+
+    dispatch(updateSavedRoomGuests({ id: room.id, guests }));
+  };
+
+  const renderSavedRoom = ({ item }: { item: SavedRoom }) => (
+    <View style={[styles.savedCard, { backgroundColor: colors.card }]}>
+      <View style={styles.savedInfo}>
+        <Text style={[styles.savedTitle, { color: colors.text }]}>
+          {item.title}
+        </Text>
+        <Text style={[styles.savedMeta, { color: colors.mutedText }]}>
+          EUR {item.price}.00 · {item.capacity} guests max
+        </Text>
+      </View>
+
+      <View style={styles.savedControls}>
+        <TouchableOpacity
+          style={styles.counterButton}
+          onPress={() => updateGuests(item, item.guests - 1)}
+        >
+          <Text style={styles.counterText}>-</Text>
+        </TouchableOpacity>
+
+        <Text style={[styles.guestsText, { color: colors.text }]}>
+          {item.guests}
+        </Text>
+
+        <TouchableOpacity
+          style={styles.counterButton}
+          onPress={() => updateGuests(item, item.guests + 1)}
+        >
+          <Text style={styles.counterText}>+</Text>
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity
+        style={styles.removeButton}
+        onPress={() => dispatch(removeSavedRoom(item.id))}
+      >
+        <Text style={styles.removeText}>Remove</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <ScreenWrapper>
       <View style={styles.root}>
-        <Text style={styles.title}>Settings</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Settings</Text>
 
         <View style={styles.userBox}>
           <View style={styles.avatar}>
             <User size={34} color={COLORS.primary} />
           </View>
-          <Text style={styles.name}>{'Taras'}</Text>
-          <Text style={styles.email}>{'taras@gmail.com'}</Text>
+          <Text style={[styles.name, { color: colors.text }]}>{'Taras'}</Text>
+          <Text style={[styles.email, { color: colors.mutedText }]}>
+            {'taras@gmail.com'}
+          </Text>
         </View>
 
-        <View style={styles.menu}>
+        <TouchableOpacity
+          style={[styles.themeRow, { backgroundColor: colors.card }]}
+          onPress={toggleTheme}
+        >
+          <Text style={[styles.rowText, { color: colors.text }]}>
+            Theme: {theme === 'light' ? 'Light' : 'Dark'}
+          </Text>
+          <Text style={styles.themeAction}>Switch</Text>
+        </TouchableOpacity>
+
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          Saved rooms
+        </Text>
+
+        <FlatList
+          data={savedRooms}
+          keyExtractor={item => item.id}
+          renderItem={renderSavedRoom}
+          ListEmptyComponent={
+            <Text style={[styles.emptySaved, { color: colors.mutedText }]}>
+              Save rooms from Search to see them here.
+            </Text>
+          }
+          scrollEnabled={false}
+        />
+
+        <View style={[styles.menu, { backgroundColor: colors.card }]}>
           {menuItems.map(item => (
-            <TouchableOpacity key={item} style={styles.row}>
-              <Text style={styles.rowText}>{item}</Text>
+            <TouchableOpacity
+              key={item}
+              style={[styles.row, { borderBottomColor: colors.border }]}
+            >
+              <Text style={[styles.rowText, { color: colors.text }]}>
+                {item}
+              </Text>
               <ChevronRight size={18} color="#999" />
             </TouchableOpacity>
           ))}
 
           <TouchableOpacity
-            style={styles.row}
+            style={[styles.row, { borderBottomColor: colors.border }]}
             onPress={() => setLogoutVisible(true)}
           >
-            <Text style={styles.rowText}>Logout</Text>
+            <Text style={[styles.rowText, { color: colors.text }]}>
+              Logout
+            </Text>
             <ChevronRight size={18} color="#999" />
           </TouchableOpacity>
         </View>
@@ -50,9 +150,11 @@ export const ProfileScreen = () => {
 
       <Modal visible={logoutVisible} transparent animationType="fade">
         <View style={styles.overlay}>
-          <View style={styles.logoutBox}>
-            <Text style={styles.logoutTitle}>Log out</Text>
-            <Text style={styles.logoutText}>
+          <View style={[styles.logoutBox, { backgroundColor: colors.card }]}>
+            <Text style={[styles.logoutTitle, { color: colors.text }]}>
+              Log out
+            </Text>
+            <Text style={[styles.logoutText, { color: colors.mutedText }]}>
               Are you sure you want to log out from your account?
             </Text>
 
@@ -91,7 +193,7 @@ const styles = StyleSheet.create({
   },
   userBox: {
     alignItems: 'center',
-    marginBottom: 28,
+    marginBottom: 18,
   },
   avatar: {
     width: 82,
@@ -113,9 +215,77 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   menu: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     overflow: 'hidden',
+  },
+  themeRow: {
+    height: 54,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    marginBottom: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  themeAction: {
+    color: COLORS.primary,
+    fontWeight: '800',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    marginBottom: 10,
+  },
+  savedCard: {
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 10,
+  },
+  savedInfo: {
+    marginBottom: 10,
+  },
+  savedTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  savedMeta: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  savedControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  counterButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  counterText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  guestsText: {
+    minWidth: 34,
+    textAlign: 'center',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  removeButton: {
+    alignSelf: 'flex-start',
+  },
+  removeText: {
+    color: '#FF3B30',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  emptySaved: {
+    marginBottom: 20,
   },
   row: {
     height: 54,

@@ -13,6 +13,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { COLORS } from './../constants/style';
 import { ROUTES } from '../constants/routes';
+import { useTheme } from '../context/ThemeContext';
 import type { RootStackParamList, TabParamList } from '../navigation/AppNavigator';
 
 type NavigationProp = BottomTabNavigationProp<TabParamList> &
@@ -35,6 +36,7 @@ type MenuItem =
 export const CustomHeader = () => {
   const [visible, setVisible] = useState(false);
   const navigation = useNavigation<NavigationProp>();
+  const { colors } = useTheme();
 
   const menuItems: MenuItem[] = [
     { label: 'My Bookings', type: 'tab', screen: ROUTES.BOOKINGS },
@@ -55,9 +57,14 @@ export const CustomHeader = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.logo}>
-        ibis <Text style={styles.sub}>STYLES</Text>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: colors.surface, borderBottomColor: colors.border },
+      ]}
+    >
+      <Text style={[styles.logo, { color: COLORS.primary }]}>
+        ibis <Text style={[styles.sub, { color: colors.text }]}>STYLES</Text>
       </Text>
 
       <TouchableOpacity onPress={() => setVisible(true)} style={styles.trigger}>
@@ -76,13 +83,19 @@ export const CustomHeader = () => {
         <TouchableWithoutFeedback onPress={() => setVisible(false)}>
           <View style={styles.overlay}>
             <TouchableWithoutFeedback>
-              <View style={styles.menu}>
+              <View style={[styles.menu, { backgroundColor: colors.card }]}>
                 <View style={styles.user}>
-                  <Text style={styles.name}>Taras</Text>
-                  <Text style={styles.email}>taras@gmail.com</Text>
+                  <Text style={[styles.name, { color: colors.text }]}>
+                    Taras
+                  </Text>
+                  <Text style={[styles.email, { color: colors.mutedText }]}>
+                    taras@gmail.com
+                  </Text>
                 </View>
 
-                <View style={styles.divider} />
+                <View
+                  style={[styles.divider, { backgroundColor: colors.border }]}
+                />
 
                 {menuItems.map(item => (
                   <TouchableOpacity
@@ -93,6 +106,7 @@ export const CustomHeader = () => {
                     <Text
                       style={[
                         styles.label,
+                        { color: colors.text },
                         item.destructive && styles.destructive,
                       ]}
                     >
@@ -116,9 +130,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    backgroundColor: '#FFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
   },
   logo: {
     fontSize: 22,

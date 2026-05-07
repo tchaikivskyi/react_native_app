@@ -32,7 +32,9 @@ export const CustomButton: React.FC<Props> = ({
       onPress={onPress}
       style={[
         styles.button,
-        isOutline ? styles.buttonOutline : styles.buttonPrimary,
+        isOutline
+          ? [styles.buttonOutline, { borderColor: COLORS.primary }]
+          : styles.buttonPrimary,
         style,
       ]}
       activeOpacity={0.7}
@@ -40,7 +42,9 @@ export const CustomButton: React.FC<Props> = ({
       <Text
         style={[
           styles.text,
-          isOutline ? styles.textOutline : styles.textPrimary,
+          isOutline
+            ? [styles.textOutline, { color: COLORS.primary }]
+            : styles.textPrimary,
           textStyle,
         ]}
       >
