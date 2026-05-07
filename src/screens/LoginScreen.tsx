@@ -16,6 +16,7 @@ import { COLORS } from '../constants/style';
 import { TextField } from '../components/Input';
 import { CheckboxItem } from '../components/CheckboxItem';
 import { CustomButton } from '../components/Button';
+import { ROUTES } from '../constants/routes';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -44,7 +45,7 @@ export const LoginScreen = () => {
     setForm(prev => ({ ...prev, [key]: value }));
   };
 
-  const goToApp = () => navigation.replace('MainTabs');
+  const goToApp = () => navigation.replace(ROUTES.MAIN_TABS);
 
   const handleSubmit = () => {
     if (isLogin) {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Room } from '../components/RoomCard';
 import { hotelApi } from '../api/hotel';
+import { Room } from '../types/room';
 
 export const useRooms = () => {
   const [rooms, setRooms] = useState<Room[]>([]);

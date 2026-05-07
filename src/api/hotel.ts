@@ -1,5 +1,5 @@
-import { Room, RoomType } from '../components/RoomCard';
 import { Reservation } from '../types/reservation';
+import { Room, RoomType } from '../types/room';
 import { api } from './clients';
 import { request } from './utils';
 
@@ -31,18 +31,6 @@ type ReservationRow = {
   check_out?: string | null;
   nights?: number | string | null;
   total?: number | string | null;
-};
-
-type ContactRow = {
-  id: string | number;
-  title?: string | null;
-  name?: string | null;
-  email?: string | null;
-};
-
-export type Contact = {
-  id: string;
-  title: string;
 };
 
 const toNumber = (value: number | string | null | undefined, fallback = 0) => {
@@ -87,10 +75,7 @@ const mapReservation = (row: ReservationRow): Reservation => {
   };
 };
 
-const mapContact = (row: ContactRow): Contact => ({
-  id: String(row.id),
-  title: row.title || row.name || row.email || 'Contact',
-});
+
 
 export const hotelApi = {
   getRooms: async () => {
@@ -117,18 +102,5 @@ export const hotelApi = {
     );
 
     return rows.map(mapReservation);
-  },
-
-  getContacts: async () => {
-    const rows = await request<ContactRow[]>(
-      api.get('/contacts', {
-        params: {
-          select: '*',
-          order: 'id.asc',
-        },
-      }),
-    );
-
-    return rows.map(mapContact);
-  },
+  }
 };

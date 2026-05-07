@@ -1,7 +1,8 @@
 import React from 'react';
 import { FlatList, StyleSheet } from 'react-native';
-import { Room, RoomCard } from './RoomCard';
+import { RoomCard } from './RoomCard';
 import { EmptyState } from './EmptyState';
+import { Room } from '../types/room';
 
 type Props = {
   data: Room[];

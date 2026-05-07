@@ -1,12 +1,14 @@
+import { ROUTES } from '../constants/routes';
+
 export type SearchStackParamList = {
-  SearchResults: undefined;
-  RoomDetails: {
+  [ROUTES.SEARCH_RESULTS]: undefined;
+  [ROUTES.ROOM_DETAILS]: {
     roomId: string;
   };
-  Checkout: {
+  [ROUTES.CHECKOUT]: {
     roomId: string;
   };
-  PaymentSuccess: {
+  [ROUTES.PAYMENT_SUCCESS]: {
     roomId: string;
     paymentMethod: string;
   };

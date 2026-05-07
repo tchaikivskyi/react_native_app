@@ -1,20 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-
-export type RoomType = 'Standart' | 'Family' | 'Suite';
-
-export type Room = {
-  id: string;
-  title: string;
-  price: number;
-  image: string;
-  type: RoomType;
-  capacity: number;
-  beds: number;
-  rating: number;
-  description: string;
-};
-
+import { Room } from '../types/room';
 import { COLORS } from '../constants/style';
 
 type Props = {

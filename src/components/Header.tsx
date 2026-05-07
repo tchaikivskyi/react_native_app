@@ -12,6 +12,7 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { COLORS } from './../constants/style';
+import { ROUTES } from '../constants/routes';
 import type { RootStackParamList, TabParamList } from '../navigation/AppNavigator';
 
 type NavigationProp = BottomTabNavigationProp<TabParamList> &
@@ -36,10 +37,10 @@ export const CustomHeader = () => {
   const navigation = useNavigation<NavigationProp>();
 
   const menuItems: MenuItem[] = [
-    { label: 'My Bookings', type: 'tab', screen: 'Bookings' },
-    { label: 'Settings', type: 'tab', screen: 'SettingsScreen' },
-    { label: 'Contacts', type: 'tab', screen: 'ContactsScreen' },
-    { label: 'Log out', type: 'stack', screen: 'LoginScreen', destructive: true },
+    { label: 'My Bookings', type: 'tab', screen: ROUTES.BOOKINGS },
+    { label: 'Settings', type: 'tab', screen: ROUTES.SETTINGS },
+    { label: 'Contacts', type: 'tab', screen: ROUTES.CONTACTS },
+    { label: 'Log out', type: 'stack', screen: ROUTES.LOGIN, destructive: true },
   ];
 
   const goTo = (item: MenuItem) => {

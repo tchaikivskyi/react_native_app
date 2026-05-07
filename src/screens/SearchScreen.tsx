@@ -16,13 +16,14 @@ import { DateRangePicker } from '../components/Calendar';
 import { CustomButton } from '../components/Button';
 
 import { COLORS } from '../constants/style';
-import { RoomType } from '../components/RoomCard';
+import { ROUTES } from '../constants/routes';
 import { SearchStackParamList } from '../navigation/types';
 import { useRooms } from '../hooks/useRooms';
+import { RoomType } from '../types/room';
 
 type SearchNavigationProp = StackNavigationProp<
   SearchStackParamList,
-  'SearchResults'
+  typeof ROUTES.SEARCH_RESULTS
 >;
 
 type SortType = 'default' | 'price_asc' | 'price_desc' | 'rating_desc';
@@ -125,7 +126,7 @@ export const SearchScreen = () => {
   }, [filters]);
 
   const handleOpenRoom = (roomId: string) => {
-    navigation.navigate('RoomDetails', { roomId });
+    navigation.navigate(ROUTES.ROOM_DETAILS, { roomId });
   };
 
   const toggleRoomType = (type: RoomType) => {

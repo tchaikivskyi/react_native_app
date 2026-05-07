@@ -3,9 +3,10 @@ import { Text } from 'react-native';
 import { NavigationContainer, NavigatorScreenParams } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Search, Calendar, User } from 'lucide-react-native';
+import { Calendar, Search as SearchIcon, User } from 'lucide-react-native';
 
 import { COLORS } from '../constants/style';
+import { ROUTES } from '../constants/routes';
 
 import { SearchScreen } from '../screens/SearchScreen';
 import { BookingScreen } from '../screens/BookingScreen';
@@ -15,16 +16,16 @@ import { SettingsScreen } from '../screens/tmp/SettingsScreen';
 import { ContactsScreen } from '../screens/tmp/ContactsScreen';
 
 export type TabParamList = {
-  Search: undefined;
-  Bookings: undefined;
-  Profile: undefined;
-  SettingsScreen: undefined;
-  ContactsScreen: undefined;
+  [ROUTES.SEARCH]: undefined;
+  [ROUTES.BOOKINGS]: undefined;
+  [ROUTES.PROFILE]: undefined;
+  [ROUTES.SETTINGS]: undefined;
+  [ROUTES.CONTACTS]: undefined;
 };
 
 export type RootStackParamList = {
-  LoginScreen: undefined;
-  MainTabs: NavigatorScreenParams<TabParamList> | undefined;
+  [ROUTES.LOGIN]: undefined;
+  [ROUTES.MAIN_TABS]: NavigatorScreenParams<TabParamList> | undefined;
 };
 
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -54,9 +55,9 @@ const MainTabs = () => (
       },
       tabBarIcon: ({ color, size }) => {
         const icons = {
-          Search,
-          Bookings: Calendar,
-          Profile: User,
+          [ROUTES.SEARCH]: SearchIcon,
+          [ROUTES.BOOKINGS]: Calendar,
+          [ROUTES.PROFILE]: User,
         };
 
         const Icon = icons[route.name as keyof typeof icons];
@@ -66,31 +67,31 @@ const MainTabs = () => (
     })}
   >
     <Tab.Screen
-      name="Search"
+      name={ROUTES.SEARCH}
       component={SearchScreen}
       options={{ tabBarLabel: 'Search a room' }}
     />
 
     <Tab.Screen
-      name="Bookings"
+      name={ROUTES.BOOKINGS}
       component={BookingScreen}
       options={{ tabBarLabel: 'My reservations' }}
     />
 
     <Tab.Screen
-      name="Profile"
+      name={ROUTES.PROFILE}
       component={ProfileScreen}
       options={{ tabBarLabel: 'Profile' }}
     />
 
     <Tab.Screen
-      name="SettingsScreen"
+      name={ROUTES.SETTINGS}
       component={SettingsScreen}
       options={hiddenTabOptions}
     />
 
     <Tab.Screen
-      name="ContactsScreen"
+      name={ROUTES.CONTACTS}
       component={ContactsScreen}
       options={hiddenTabOptions}
     />
@@ -100,11 +101,11 @@ const MainTabs = () => (
 export const AppNavigator = () => (
   <NavigationContainer>
     <Stack.Navigator
-      initialRouteName="LoginScreen"
+      initialRouteName={ROUTES.LOGIN}
       screenOptions={{ headerShown: false }}
     >
-      <Stack.Screen name="LoginScreen" component={LoginScreen} />
-      <Stack.Screen name="MainTabs" component={MainTabs} />
+      <Stack.Screen name={ROUTES.LOGIN} component={LoginScreen} />
+      <Stack.Screen name={ROUTES.MAIN_TABS} component={MainTabs} />
     </Stack.Navigator>
   </NavigationContainer>
 );
