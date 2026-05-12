@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -18,9 +18,7 @@ import { COLORS } from '../constants/style';
 import { ROUTES } from '../constants/routes';
 import { SearchStackParamList } from '../navigation/types';
 import { useRooms } from '../hooks/useRooms';
-import { Room, RoomType } from '../types/room';
-import { useAppDispatch, useAppSelector } from '../store';
-import { addSavedRoom, removeSavedRoom } from '../store/room/roomSlice';
+import { RoomType } from '../types/room';
 import { useTheme } from '../context/ThemeContext';
 
 type SearchNavigationProp = StackNavigationProp<
@@ -60,28 +58,22 @@ const guestOptions = [1, 2, 3, 4];
 
 export const SearchScreen = () => {
   const navigation = useNavigation<SearchNavigationProp>();
-  const dispatch = useAppDispatch();
   const { colors } = useTheme();
   const { rooms, loading, error, refetch } = useRooms();
-  const savedRooms = useAppSelector(state => state.rooms.savedRooms);
-  const savedRoomIds = useMemo(
-    () => savedRooms.map(room => room.id),
-    [savedRooms],
-  );
 
   const [sort, setSort] = useState<SortType>('default');
   const [filters, setFilters] = useState<Filters>(initialFilters);
   const [sortVisible, setSortVisible] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
 
-  const updateFilters = (newFilters: Partial<Filters>) => {
+  const updateFilters = useCallback((newFilters: Partial<Filters>) => {
     setFilters(prevFilters => ({ ...prevFilters, ...newFilters }));
-  };
+  }, []);
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setFilters(initialFilters);
     setSort('default');
-  };
+  }, []);
 
   const filteredData = useMemo(() => {
     let result = [...rooms];
@@ -125,26 +117,17 @@ export const SearchScreen = () => {
     ].filter(value => value !== null).length;
   }, [filters]);
 
-  const handleOpenRoom = (roomId: string) => {
+  const handleOpenRoom = useCallback((roomId: string) => {
     navigation.navigate(ROUTES.ROOM_DETAILS, { roomId });
-  };
+  }, [navigation]);
 
-  const handleToggleSaveRoom = (room: Room) => {
-    if (savedRoomIds.includes(room.id)) {
-      dispatch(removeSavedRoom(room.id));
-      return;
-    }
-
-    dispatch(addSavedRoom(room));
-  };
-
-  const toggleRoomType = (type: RoomType) => {
+  const toggleRoomType = useCallback((type: RoomType) => {
     updateFilters({ type: filters.type === type ? null : type });
-  };
+  }, [filters.type, updateFilters]);
 
-  const toggleGuests = (guests: number) => {
+  const toggleGuests = useCallback((guests: number) => {
     updateFilters({ guests: filters.guests === guests ? null : guests });
-  };
+  }, [filters.guests, updateFilters]);
 
   const ListHeader = useMemo(
     () => (
@@ -194,7 +177,13 @@ export const SearchScreen = () => {
         </View>
       </View>
     ),
-    [activeFiltersCount, colors, filters.startDate, filters.endDate],
+    [
+      activeFiltersCount,
+      colors,
+      filters.startDate,
+      filters.endDate,
+      updateFilters,
+    ],
   );
 
   const renderChip = (
@@ -247,8 +236,6 @@ export const SearchScreen = () => {
           HeaderComponent={ListHeader}
           onReset={resetFilters}
           onRoomPress={handleOpenRoom}
-          savedRoomIds={savedRoomIds}
-          onToggleSave={handleToggleSaveRoom}
         />
       )}
 

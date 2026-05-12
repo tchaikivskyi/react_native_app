@@ -1,28 +1,24 @@
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Room } from '../types/room';
-import { COLORS } from '../constants/style';
 import { useTheme } from '../context/ThemeContext';
 
 type Props = {
   room: Room;
-  onPress: () => void;
-  isSaved?: boolean;
-  onToggleSave?: (room: Room) => void;
+  onPress: (roomId: string) => void;
 };
 
-export const RoomCard: React.FC<Props> = ({
-  room,
-  onPress,
-  isSaved = false,
-  onToggleSave,
-}) => {
+const RoomCardComponent: React.FC<Props> = ({ room, onPress }) => {
   const { colors } = useTheme();
+
+  const handlePress = useCallback(() => {
+    onPress(room.id);
+  }, [onPress, room.id]);
 
   return (
     <TouchableOpacity
       style={[styles.card, { backgroundColor: colors.card }]}
-      onPress={onPress}
+      onPress={handlePress}
       activeOpacity={0.9}
     >
       <View
@@ -46,21 +42,12 @@ export const RoomCard: React.FC<Props> = ({
         <Text style={[styles.price, { color: colors.text }]}>
           EUR {room.price}.00
         </Text>
-
-        {onToggleSave && (
-          <TouchableOpacity
-            style={[styles.saveButton, isSaved && styles.saveButtonActive]}
-            onPress={() => onToggleSave(room)}
-          >
-            <Text style={[styles.saveText, isSaved && styles.saveTextActive]}>
-              {isSaved ? 'Saved' : 'Save'}
-            </Text>
-          </TouchableOpacity>
-        )}
       </View>
     </TouchableOpacity>
   );
 };
+
+export const RoomCard = memo(RoomCardComponent);
 
 const styles = StyleSheet.create({
   card: {
@@ -98,24 +85,5 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 14,
     fontWeight: 'bold',
-  },
-  saveButton: {
-    borderWidth: 1,
-    borderColor: COLORS.primary,
-    borderRadius: 8,
-    paddingVertical: 6,
-    marginTop: 8,
-    alignItems: 'center',
-  },
-  saveButtonActive: {
-    backgroundColor: COLORS.primary,
-  },
-  saveText: {
-    color: COLORS.primary,
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  saveTextActive: {
-    color: '#FFFFFF',
   },
 });

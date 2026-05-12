@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { FlatList, StyleSheet } from 'react-native';
+import type { ListRenderItem } from 'react-native';
 import { RoomCard } from './RoomCard';
 import { EmptyState } from './EmptyState';
 import { Room } from '../types/room';
@@ -10,19 +11,20 @@ type Props = {
   HeaderComponent: React.ReactElement;
   onReset: () => void;
   onRoomPress: (roomId: string) => void;
-  savedRoomIds?: string[];
-  onToggleSave?: (room: Room) => void;
 };
 
-export const RoomList: React.FC<Props> = ({
+const RoomListComponent: React.FC<Props> = ({
   data,
   loading,
   HeaderComponent,
   onReset,
   onRoomPress,
-  savedRoomIds = [],
-  onToggleSave,
 }) => {
+  const renderRoom: ListRenderItem<Room> = useCallback(
+    ({ item }) => <RoomCard room={item} onPress={onRoomPress} />,
+    [onRoomPress],
+  );
+
   return (
     <FlatList
       data={data}
@@ -31,19 +33,17 @@ export const RoomList: React.FC<Props> = ({
       columnWrapperStyle={styles.row}
       ListHeaderComponent={HeaderComponent}
       ListEmptyComponent={!loading ? <EmptyState onReset={onReset} /> : null}
-      renderItem={({ item }) => (
-        <RoomCard
-          room={item}
-          isSaved={savedRoomIds.includes(item.id)}
-          onPress={() => onRoomPress(item.id)}
-          onToggleSave={onToggleSave}
-        />
-      )}
+      renderItem={renderRoom}
       contentContainerStyle={styles.listContainer}
       showsVerticalScrollIndicator={false}
+      removeClippedSubviews
+      initialNumToRender={6}
+      windowSize={5}
     />
   );
 };
+
+export const RoomList = memo(RoomListComponent);
 
 const styles = StyleSheet.create({
   listContainer: {
