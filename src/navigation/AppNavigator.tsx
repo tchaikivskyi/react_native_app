@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  CommonActions,
   NavigationContainer,
   NavigatorScreenParams,
 } from '@react-navigation/native';
@@ -103,6 +104,19 @@ const MainTabs = () => {
           tabBarLabel: 'Search a room',
           tabBarIcon: renderSearchIcon,
         }}
+        listeners={({ navigation }) => ({
+          tabPress: event => {
+            event.preventDefault();
+            navigation.dispatch(
+              CommonActions.navigate({
+                name: ROUTES.SEARCH,
+                params: {
+                  screen: ROUTES.SEARCH_RESULTS,
+                },
+              }),
+            );
+          },
+        })}
       />
 
       <Tab.Screen

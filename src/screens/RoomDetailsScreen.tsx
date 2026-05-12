@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import {
   ActivityIndicator,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -9,21 +10,40 @@ import {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { CustomButton } from '../components/Button';
+import { AmenityList } from '../components/AmenityList';
+import { ReviewCard } from '../components/ReviewCard';
 import { ScreenWrapper } from '../components/ScreenWrapper';
 import { COLORS } from '../constants/style';
 import { ROUTES } from '../constants/routes';
 import { useTheme } from '../context/ThemeContext';
 import { useRooms } from '../hooks/useRooms';
+import { useRoomReviews } from '../hooks/useRoomReviews';
 import { SearchStackParamList } from '../navigation/types';
+import { useAppDispatch } from '../store';
+import { addReservation } from '../store/reservation/reservationSlice';
 
 type Props = NativeStackScreenProps<
   SearchStackParamList,
   typeof ROUTES.ROOM_DETAILS
 >;
 
+const getDateOffset = (days: number) => {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+
+  return date.toISOString().split('T')[0];
+};
+
 export const RoomDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
+  const dispatch = useAppDispatch();
   const { colors } = useTheme();
   const { rooms, loading, error, refetch } = useRooms();
+  const {
+    reviews,
+    loading: reviewsLoading,
+    error: reviewsError,
+    refetch: refetchReviews,
+  } = useRoomReviews(route.params.roomId);
 
   const room = useMemo(
     () => rooms.find(item => item.id === route.params.roomId),
@@ -31,12 +51,35 @@ export const RoomDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   );
 
   const handleReserve = () => {
+    if (!room) return;
+
+    const checkIn = getDateOffset(1);
+    const checkOut = getDateOffset(2);
+
+    dispatch(
+      addReservation({
+        id: `local-${room.id}-${Date.now()}`,
+        guestName: 'Taras',
+        location: 'Ibis Styles Hotel',
+        status: 'current',
+        roomTitle: room.title,
+        checkIn,
+        checkOut,
+        nights: 1,
+        total: room.price,
+      }),
+    );
+
     navigation.getParent()?.navigate(ROUTES.BOOKINGS);
   };
 
   return (
     <ScreenWrapper>
-      <View style={styles.root}>
+      <ScrollView
+        style={styles.root}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
@@ -124,9 +167,36 @@ export const RoomDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
                 style={styles.reserveButton}
               />
             </View>
+
+            <AmenityList roomType={room.type} />
+
+            <View style={styles.reviewsSection}>
+              <View style={styles.reviewsHeader}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                  Guest reviews
+                </Text>
+                {reviewsError && (
+                  <TouchableOpacity onPress={refetchReviews}>
+                    <Text style={styles.retryText}>Retry</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {reviewsLoading ? (
+                <ActivityIndicator color={COLORS.primary} />
+              ) : reviewsError ? (
+                <Text style={[styles.description, { color: colors.mutedText }]}>
+                  {reviewsError}
+                </Text>
+              ) : (
+                reviews.map(review => (
+                  <ReviewCard key={review.id} review={review} />
+                ))
+              )}
+            </View>
           </>
         )}
-      </View>
+      </ScrollView>
     </ScreenWrapper>
   );
 };
@@ -134,7 +204,10 @@ export const RoomDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+  },
+  content: {
     paddingTop: 16,
+    paddingBottom: 32,
   },
   backButton: {
     alignSelf: 'flex-start',
@@ -203,5 +276,23 @@ const styles = StyleSheet.create({
   },
   reserveButton: {
     width: '100%',
+  },
+  reviewsSection: {
+    marginTop: 22,
+  },
+  reviewsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  retryText: {
+    color: COLORS.primary,
+    fontSize: 13,
+    fontWeight: '800',
   },
 });

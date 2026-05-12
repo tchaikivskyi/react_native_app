@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Text,
@@ -14,15 +14,22 @@ import { ChevronRight } from 'lucide-react-native';
 import { CustomButton } from '../components/Button';
 import { useReservations } from '../hooks/useReservations';
 import { Reservation, ReservationStatus } from '../types/reservation';
+import { useAppSelector } from '../store';
 
 export const BookingScreen = () => {
   const [activeFilter, setActiveFilter] = useState<ReservationStatus>('all');
   const { reservations, loading, error, refetch } = useReservations();
+  const localReservations = useAppSelector(state => state.reservations.items);
+
+  const allReservations = useMemo(
+    () => [...localReservations, ...reservations],
+    [localReservations, reservations],
+  );
 
   const filteredReservations =
     activeFilter === 'all'
-      ? reservations
-      : reservations.filter(item => item.status === activeFilter);
+      ? allReservations
+      : allReservations.filter(item => item.status === activeFilter);
 
   const filters: { label: string; value: ReservationStatus }[] = [
     { label: 'ALL', value: 'all' },
@@ -76,7 +83,7 @@ export const BookingScreen = () => {
 
         <Text style={styles.title}>Your reservations</Text>
 
-        {loading && reservations.length === 0 ? (
+        {loading && allReservations.length === 0 ? (
           <ActivityIndicator
             size="large"
             color={COLORS.primary}

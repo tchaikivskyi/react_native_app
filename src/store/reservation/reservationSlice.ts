@@ -34,6 +34,9 @@ const reservationSlice = createSlice({
     ) => {
       state.activeFilter = action.payload;
     },
+    addReservation: (state, action: PayloadAction<Reservation>) => {
+      state.items.unshift(action.payload);
+    },
     resetReservationsState: () => initialState,
   },
 });
@@ -43,6 +46,7 @@ export const {
   setReservationsLoading,
   setReservationsError,
   setReservationFilter,
+  addReservation,
   resetReservationsState,
 } = reservationSlice.actions;
 
